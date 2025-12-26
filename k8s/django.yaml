@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-deployment
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - name: django
+        image: wasanssss/korea-trip-be:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        # 필요한 환경변수 추가
+        - name: DJANGO_SECRET_KEY
+          value: "django-insecure-key-change-me"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-service
+  namespace: dev
+spec:
+  selector:
+    app: django
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
