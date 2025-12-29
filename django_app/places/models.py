@@ -1,0 +1,90 @@
+from django.db import models
+from django.conf import settings
+
+class Place(models.Model):
+    """
+    장소 정보 (places)
+    - 카카오 API 데이터와 사용자 등록 데이터를 통합 관리
+    - 이연주님 설계 반영 (Provider, Category JSON, Thumbnail 등)
+    """
+    # [1] API 제공자 구분 (카카오 / 사용자)
+    class Provider(models.TextChoices):
+        KAKAO = 'KAKAO', 'Kakao API'
+        USER = 'USER', 'User Registered'
+        
+    provider = models.CharField(max_length=50, choices=Provider.choices, default=Provider.KAKAO)
+    
+    # [2] 장소 ID 관리
+    # 카카오 장소 ID는 유니크하지만, 사용자 등록일 경우 null일 수 있음 -> unique=True 유지하되 null 허용
+    place_api_id = models.CharField(max_length=50, unique=True, null=True, blank=True, help_text="카카오맵 장소 ID")
+    
+    name = models.TextField(help_text="장소 이름")
+    
+    # [3] 카테고리 (대분류 / 상세분류 JSON)
+    category_main = models.CharField(max_length=50, help_text="메인 카테고리 (예: 음식점, 관광지)")
+    
+    # "['음식점', '베이커리', '빵']" 처럼 리스트로 저장하기 위해 JSONField 사용
+    # SQLite에서는 텍스트로 저장되지만, PostgreSQL에서는 실제 JSON 타입으로 저장됨 (검색 유리)
+    category_detail = models.JSONField(default=list, blank=True, help_text="상세 카테고리 리스트")
+    
+    # [4] 위치 정보
+    address = models.TextField(help_text="도로명 주소")
+    city = models.CharField(max_length=50, db_index=True, help_text="도시 (필터링용)")
+    
+    # 위도/경도 (정밀도 고려하여 Decimal 사용)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    
+    # [5] 썸네일 (여러 장일 수 있으므로 JSON 또는 텍스트 고려 -> 확장성 위해 JSON 추천)
+    # 이연주님 코멘트: "text? json? 배포에 맞는 쪽으로" -> JSONField가 가장 유연함
+    thumbnail_urls = models.JSONField(default=list, blank=True, null=True, help_text="이미지 URL 리스트")
+    
+    # [6] 등록자 정보 (사용자 직접 등록 시)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'places'
+        indexes = [
+            models.Index(fields=['city']),        # 도시별 검색 최적화
+            models.Index(fields=['provider']),    # 제공자별 필터링
+            models.Index(fields=['place_api_id']),# API ID 조회
+        ]
+
+class PlaceReview(models.Model):
+    """
+    장소 리뷰 (place_reviews)
+    """
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    rating = models.IntegerField(default=5, choices=[(i, str(i)) for i in range(1, 6)]) # 1~5점
+    
+    # 리뷰 이미지 (옵션)
+    image_url = models.CharField(max_length=500, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'place_reviews'
+        ordering = ['-created_at']
+
+class PlaceBookmark(models.Model):
+    """
+    장소 찜하기 (place_bookmarks)
+    "한 사람이 한 장소를 여러 번 저장할 게 아니니까 유니크 처리"
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='place_bookmarks')
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='bookmarks')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'place_bookmarks'
+        unique_together = ('user', 'place') # ★ 중복 찜 방지 (Composite Unique Key)
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['created_at']),
+        ]
