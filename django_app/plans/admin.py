@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import TravelPlan, PlanDetail, TravelPost, Comment
 
-# Register your models here.
+admin.site.register(TravelPlan)
+admin.site.register(PlanDetail)
+admin.site.register(TravelPost)
+admin.site.register(Comment)

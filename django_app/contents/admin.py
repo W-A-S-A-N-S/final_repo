@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Shortform, ShortformComment, TranslationEntry
 
-# Register your models here.
+admin.site.register(Shortform)
+admin.site.register(ShortformComment)
+admin.site.register(TranslationEntry)
