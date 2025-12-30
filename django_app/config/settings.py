@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     
     #프로젝트로 생성한 앱
     'users',
-    'places',
+    'places.apps.PlacesConfig',
     'plans',
     'contents',
     'reservations',
