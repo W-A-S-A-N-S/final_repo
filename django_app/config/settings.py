@@ -58,6 +58,7 @@ AUTH_USER_MODEL = 'users.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -145,6 +146,50 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+<<<<<<< HEAD
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'users.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # 각 View에서 개별 설정
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ],
+}
+
+# JWT Settings
+JWT_SECRET_KEY = SECRET_KEY
+JWT_ALGORITHM = 'HS256'
+JWT_ACCESS_TOKEN_LIFETIME = 60 * 60  # 1 hour
+JWT_REFRESH_TOKEN_LIFETIME = 60 * 60 * 24 * 14  # 14 days
+
+# Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+
+# CORS Settings
+CORS_ALLOW_ALL_ORIGINS = True  # 개발용, 프로덕션에서는 특정 도메인만 허용
+CORS_ALLOW_CREDENTIALS = True
+
+# Time Zone
+TIME_ZONE = 'Asia/Seoul'
+USE_TZ = True
+=======
 # BigAutoField 설정
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -154,3 +199,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # NOTE: Production에서 S3 등을 사용할 경우 스토리지 백엔드로 교체 예정.
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+>>>>>>> 1311e5e6dfd7d0fbe5bd8a1b1ca9330630f549ea
