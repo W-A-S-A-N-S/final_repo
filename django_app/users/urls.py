@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import (
     RegisterView, LoginView, LogoutView, TokenRefreshView,
     SendVerificationView, VerifyEmailView,
@@ -6,6 +6,7 @@ from .views import (
     ProfileView, PreferencesView, MainPageView, SavedIdCheckView,
     login_page, register_page, main_page, api_test_page
 )
+from .social_auth import SocialLoginCallbackView, SocialLoginAPIView
 
 app_name = 'users'
 
@@ -38,4 +39,11 @@ urlpatterns = [
     # 프로필 및 설정
     path('api/profile/', ProfileView.as_view(), name='profile'),
     path('api/preferences/', PreferencesView.as_view(), name='preferences'),
+
+    # 소셜 로그인 API
+    path('api/social/login/<str:provider>/', SocialLoginAPIView.as_view(), name='social-login-api'),
+    path('social/callback/<str:provider>/', SocialLoginCallbackView.as_view(), name='social-callback'),
+
+    # Django-allauth URLs
+    path('accounts/', include('allauth.urls')),
 ]

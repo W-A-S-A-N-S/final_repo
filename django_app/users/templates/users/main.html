@@ -594,17 +594,35 @@
 
             try {
                 const response = await fetch(`${API_BASE_URL}/main/`, { headers });
-                const data = await response.json();
 
-                renderUserMenu(data.user);
-                renderDestinations(data.trending_destinations);
-                renderExperiences(data.featured_experiences);
-                renderRecommendations(data.local_recommendations);
-                renderTips(data.travel_tips);
-                renderStats(data.quick_stats);
+                // 토큰이 만료된 경우 localStorage에서 제거하고 재시도
+                if (response.status === 401 && token) {
+                    console.log('Token expired, removing and retrying...');
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    // 토큰 없이 재시도
+                    const retryResponse = await fetch(`${API_BASE_URL}/main/`);
+                    const data = await retryResponse.json();
+                    renderPageData(data);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);  // 디버깅용
+                renderPageData(data);
             } catch (error) {
                 console.error('Error loading main data:', error);
             }
+        }
+
+        // 페이지 데이터 렌더링 (중복 제거)
+        function renderPageData(data) {
+            renderUserMenu(data.user);
+            renderDestinations(data.trending_destinations || []);
+            renderExperiences(data.featured_experiences || []);
+            renderRecommendations(data.local_recommendations || []);
+            renderTips(data.travel_tips || []);
+            renderStats(data.quick_stats || {});
         }
 
         // 사용자 메뉴 렌더링
@@ -713,22 +731,24 @@
 
         // 통계 렌더링
         function renderStats(stats) {
+            if (!stats || Object.keys(stats).length === 0) return;
+
             const grid = document.getElementById('statsGrid');
             grid.innerHTML = `
                 <div>
-                    <div class="stat-number">${stats.destinations}</div>
+                    <div class="stat-number">${stats.destinations || 0}</div>
                     <div class="stat-label">Destinations</div>
                 </div>
                 <div>
-                    <div class="stat-number">${stats.experiences.toLocaleString()}</div>
+                    <div class="stat-number">${(stats.experiences || 0).toLocaleString()}</div>
                     <div class="stat-label">Experiences</div>
                 </div>
                 <div>
-                    <div class="stat-number">${stats.local_guides}</div>
+                    <div class="stat-number">${stats.local_guides || 0}</div>
                     <div class="stat-label">Local Guides</div>
                 </div>
                 <div>
-                    <div class="stat-number">${(stats.reviews / 1000).toFixed(0)}K+</div>
+                    <div class="stat-number">${((stats.reviews || 0) / 1000).toFixed(0)}K+</div>
                     <div class="stat-label">Reviews</div>
                 </div>
             `;

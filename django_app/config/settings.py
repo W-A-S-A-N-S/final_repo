@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 
 # Application definition
@@ -43,7 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    
+
+    # Social Authentication
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.kakao',
+    'allauth.socialaccount.providers.naver',
+
     #프로젝트로 생성한 앱
     'users',
     'places.apps.PlacesConfig',
@@ -51,6 +60,9 @@ INSTALLED_APPS = [
     'contents',
     'reservations',
 ]
+
+# Django Sites Framework (Required for allauth)
+SITE_ID = 1
 
 #커스텀 유저 모델 지정
 AUTH_USER_MODEL = 'users.User'
@@ -64,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # django-allauth
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -146,7 +159,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-<<<<<<< HEAD
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 
@@ -176,6 +188,57 @@ JWT_REFRESH_TOKEN_LIFETIME = 60 * 60 * 24 * 14  # 14 days
 
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Django Allauth Settings
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # 기본 Django 인증
+    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth 인증
+]
+
+# Allauth Configuration
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+# 소셜 로그인 후 리다이렉트 URL
+LOGIN_REDIRECT_URL = '/api/users/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/api/users/login-page/'
+
+# 소셜 로그인 Provider 설정 (환경변수로 관리 권장)
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'APP': {
+            'client_id': 'YOUR_GOOGLE_CLIENT_ID',  # 환경변수로 설정 필요
+            'secret': 'YOUR_GOOGLE_CLIENT_SECRET',  # 환경변수로 설정 필요
+            'key': ''
+        }
+    },
+    'kakao': {
+        'APP': {
+            'client_id': 'YOUR_KAKAO_REST_API_KEY',  # 환경변수로 설정 필요
+            'secret': 'YOUR_KAKAO_CLIENT_SECRET',  # 환경변수로 설정 필요
+            'key': ''
+        }
+    },
+    'naver': {
+        'APP': {
+            'client_id': 'YOUR_NAVER_CLIENT_ID',  # 환경변수로 설정 필요
+            'secret': 'YOUR_NAVER_CLIENT_SECRET',  # 환경변수로 설정 필요
+            'key': ''
+        }
+    }
+}
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
@@ -189,7 +252,6 @@ CORS_ALLOW_CREDENTIALS = True
 # Time Zone
 TIME_ZONE = 'Asia/Seoul'
 USE_TZ = True
-=======
 # BigAutoField 설정
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -199,4 +261,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # NOTE: Production에서 S3 등을 사용할 경우 스토리지 백엔드로 교체 예정.
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
->>>>>>> 1311e5e6dfd7d0fbe5bd8a1b1ca9330630f549ea
